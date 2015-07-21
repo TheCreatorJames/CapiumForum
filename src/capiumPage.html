@@ -1,0 +1,679 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Website</title>
+<link href="http://cdn.jsdelivr.net/foundation/5.1.1/css/foundation.min.css" type ="text/css" rel="stylesheet">
+<script src="//cdn.jsdelivr.net/foundation/5.1.1/css/foundation.min.js"></script>
+%attachment%
+<script type="text/javascript">
+//The Boing Follower.
+//Written by Jesse Mitchell.
+//7/18/2015
+
+//To set one of these up. Give a div an id, and give it the class "scroller". 
+//To make it scroll, run the javascript method "AddScroller" with a string of the id. 
+// ex. AddScroller("example", 400, "300px");
+
+//elName - the id of the element
+//topOffset - the offset in pixels you want it to be from the top. Needs to be a number.
+//leftOffset - the offset in css format. "60px" or "60%". Needs to be a string.
+function AddScroller(elName, topOffset, leftOffset)
+{
+	stuffToScroll.push([elName, topOffset, leftOffset]);
+}
+
+var stuffToScroll = [];
+
+//execute this method once, preferably on body loading.
+function scrollStuffAround()
+{
+	try 
+	{
+		for(var i = 0; i < stuffToScroll.length; i++)
+		{
+			var element = document.getElementById(stuffToScroll[i][0]);
+			var getTo = (stuffToScroll[i][1]+document.body.scrollTop); //get the amount from the top the user has scrolled.
+			var currentPosition = element.style["top"];
+			currentPosition = currentPosition.substring(0, currentPosition.length - 2);
+			
+			if(isNaN(currentPosition)) //JavaScript fails to use logic sometimes. There's a bug in some engines.
+			{
+				currentPosition = 0;
+			}
+			else
+			{
+				currentPosition = parseInt(currentPosition);
+				if(isNaN(currentPosition)) //so... there.
+				{
+					currentPosition = 0;		
+				}
+			}
+
+			if(currentPosition < getTo || currentPosition > getTo)
+			{
+				currentPosition += Math.round((getTo-currentPosition)/18); //makes it slow down as it gets closer to the position.
+			}
+			
+			
+			element.style["top"] = "" + currentPosition +"px";
+			element.style["left"] = stuffToScroll[i][2];
+
+		} 
+	} catch(exception) {}
+	setTimeout(scrollStuffAround, 10); //calls it every 10 milliseconds.
+}
+</script>
+
+<style>
+body {
+	padding: 6px;
+	background-color: #DFDFDF;
+}
+
+hr
+{
+	background-color: #000000;
+	display: none;
+}
+
+.changeColor
+{
+	background-color: #ECECEC;
+}
+
+.changeColor2
+{
+	background-color: #8E8E8E;
+}
+
+.scroller
+{
+	position: absolute;
+	top: 0px;
+}
+
+.postDiv {
+	width: 100%;
+
+}
+</style>
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+var loggedIn = false;
+var username = "";
+var cThread = "";
+var cBoard = "default";
+var count = 0;
+var socket = null;
+
+var likeText = "Like";
+var hateText = "Dislike";
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+    }
+    return "";
+}
+
+
+function makePre(post, postId)
+{
+	var postX = post.match(new RegExp("[$][=][A-Za-z0-9_:;,+\\\\:?=./\\\\&-]+"));
+	var makingPre = ['pre', { id : "post" + postId, style: "white-space: pre-wrap; font: 12px Verdana" }];
+
+	while(postX != null)
+	{
+		postX = postX.toString();
+
+		makingPre.push(post.substring(0, post.indexOf(postX)));
+		makingPre.push(['img', { src: postX.substring(2), style: "max-width: 80%;" } ]);
+
+		post = post.substring(post.indexOf(postX) + postX.length);
+
+		postX = post.match(new RegExp("[$][=][A-Za-z0-9_:?=\\\\:./-]+"));
+	}
+
+	if(post != "")
+	{
+		makingPre.push(post);
+	}
+
+	return makingPre;
+}
+
+
+//I wrote this function as a sophomore. 
+//This is actually a weak 'hash' function.
+//I know much more about security now.
+function encrypt(echo)
+{
+	var x = "";
+	var m = -10;
+	for(var i = 0; i < echo.length; i++)
+	{
+		m += echo.charCodeAt(i) ^ echo.charCodeAt(echo.length - 1 - i);
+		m *= 10;
+		m = m ^ echo.charCodeAt(i);
+		x += String.fromCharCode(m);
+	}
+	return escape(x);
+}
+
+//uses the algorithm in such a way that the encryption can't be reversed.
+function superEncrypt(echo, username)
+{
+	var result = "";
+	for(var i = 0; i < echo.length; i++)
+	{
+		result += echo.charAt(i);
+		result = unescape(encrypt(result));
+		result = encryptPass(result, encrypt(result));
+		result = encryptPass(result, encryptPass(username, result));
+		if(echo.charAt(i) > 'l')
+		result += "@";
+	}
+	return escape(result);
+}
+
+//creates a password for you from whatever you pass in.
+function CoolPasswordMaker(info, key)
+{
+	return Alphabetize(unescape(superEncrypt(info, key)));
+}
+
+//makes sure everything is a letter.
+function Alphabetize(info)
+{
+	var result = "";
+	for(var i = 0; i < info.length; i++)
+	{
+		var num = info.toUpperCase().charCodeAt(i) % (26+10);
+
+		if(num > 26)
+		{
+			num -= 26;
+			num += 48;
+		}
+		else
+		{
+			num += 13;
+			num = num % 26;
+			num += 65;
+		}
+
+		var lol = ((i + num) % 2 == 0);
+
+		if(lol)
+		result += String.fromCharCode(num);
+		else result += String.fromCharCode(num).toLowerCase();
+		
+	}
+	return result;
+}
+
+
+//encrypts with a key. It's probably as strong as a small OTP.
+function encryptPass(info, key)
+{
+	var result = "";
+
+	var helper = 0;
+
+	for(var i = 0; i < info.length; i++)
+	{
+		var keyNum1 = key.charCodeAt(i % key.length);
+		var keyNum2 = key.charCodeAt(key.length - (i % key.length) - 1);
+
+		var letter = info.charCodeAt(i);
+
+		var num = helper;
+
+		if(i % 2 == 0)
+		{
+			num = (letter ^ keyNum1 + info.length) ^ (keyNum2) ^ i*i * 10;
+		} else
+		{
+			num = (letter ^ keyNum2 + info.length) ^ (keyNum1) ^ i*i * 10;
+		}
+
+		helper += num;
+
+		result += String.fromCharCode(num);
+
+	}
+
+	return result;
+}
+
+var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+
+function fixMin(dat)
+{
+		if (("" + dat).length == 1)
+			return "0" + dat;
+		return dat;
+}
+
+function fixHour(dat)
+{
+	if(dat == 0) return 12;
+	return dat;
+}
+
+//generates a new post.
+function newPost(poster, post, date, score)
+{
+	var editing = false;
+	var original = post;
+	var postId = count++;
+	if(post === undefined || post === null) return [];
+	return	[
+				'div', { style: "display: inline-table;", class: "panel changeColor postDiv" },
+					['table', { class: "postDiv changeColor"},
+						['tr', { class: "changeColor"},
+							['td', poster],
+							['td', { style: "float: right;" }, days[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear(), ['br'], fixHour((date.getHours()%12)) + ":" + fixMin(date.getMinutes()) + " " + ((date.getHours > 12) ? "AM" : "PM")
+							]
+						],
+						['tr',
+							['td', { id: "score" + postId, class: "changeColor" }, ['label', "Votes: " + score]]
+						],
+						['tr', {  },
+							( (loggedIn) ? ['td',
+								((username == poster) ? ['button', { class: "small", click: function()
+								{	
+									if(editing)
+									{
+										socket.emit("editPost", { id: postId, poster: username, post: document.getElementById("editText").value, thread: cThread });
+										original = document.getElementById("editText").value;
+										this.innerHTML = "Edit";
+									}
+									else
+									{
+										
+										var editDiv = document.getElementById("post"+ postId);
+										//var original = editDiv.innerHTML;
+
+										editDiv.innerHTML = DOMBuilder.build(['textarea', { keydown: function(e)
+											{
+												var keyCode = e.keyCode || e.which;
+												if(keyCode == 9)
+												{
+													e.preventDefault();
+													this.value = this.value.substring(0, this.selectionStart) + "\t" + this.value.substring(this.selectionStart);
+												}
+
+
+											}, id: "editText", style: "width: 90%; height: 90%;" }, original], "html");
+
+										this.innerHTML = "Done";
+									}
+									editing = !editing;
+								}},  "Edit"] : []),
+								((username == poster) ? ['button', { class: "small", click: function()
+								{	
+									socket.emit("deletePost", { id: postId, thread: cThread });
+									this.innerHTML = "DELETED - REFRESH";
+								}},  "Delete"] : []),
+								['button', { class: "small", click: function()
+								{
+									socket.emit("votePost", { id: postId, vote: "up", thread: cThread });
+								}},  likeText],
+								['button',  {class: "small", click: function()
+								{
+									socket.emit("votePost", { id: postId, vote: "down", thread: cThread });
+								}}, hateText]
+							] : [])
+						]
+					],
+					makePre(post, postId)
+			];
+}
+
+var nextTime = true;
+
+function goToBoard()
+{
+	socket.emit("createBoard", { board: escape(window.prompt("Name of the Board?")) });
+}
+
+function init()
+{
+	scrollStuffAround();
+
+	function requestBoard()
+	{
+		nextTime = false;
+		socket.emit("requestBoard", { board: cBoard });	
+
+	}
+
+	function parseHash()
+	{
+		var parsing = window.location.hash.substring(1);
+		var parsed = parsing.split(":");
+		//alert(parsed[0]);
+		if(parsed.length == 1)
+		{
+			if(parsed[0] != "login")
+			{
+				//cBoard = parsed[0];
+				socket.emit("requestBoard", { board: escape(parsed[0]) });
+			} else
+			{
+				registerOrLogin();
+			}
+		} else if(parsed.length == 2)
+		{
+			//cBoard = parsed[0];
+			cThread = parsed[1];
+			socket.emit("requestThread", { board : escape(parsed[0]), thread: escape(unescape(cThread)) });
+			cBoard = parsed[0];
+		}
+	}
+
+	var refresh = function()
+	{
+		socket.emit("requestThread", { board: escape(cBoard), thread: escape(unescape(cThread)) });
+	}
+	
+
+	window.onhashchange = function()
+	{
+		//alert("Hello");
+		document.title = unescape(window.location.hash);
+		if(nextTime)
+		{
+			parseHash();
+		} else nextTime = true;
+	}
+
+	document.body.appendChild( DOMBuilder.build(['div', 
+		['label', { class: "small button changeColor2", click:  requestBoard }, "Board Menu"
+		], 
+		['label', { class: "small button changeColor2", click:  goToBoard }, "Switch Board"
+		],
+		['label', { class: "small button changeColor2", click: refresh, id: "refreshButton" }, "Refresh"],
+		['label', { id: "loginLabel", class: "small button changeColor2", click: function()
+		{
+			registerOrLogin();
+		}}, "Login"]
+	] , "dom"));
+
+	var mainDiv = document.body.appendChild(document.createElement('div'));
+	//mainDiv.style.backgroundImage = "url(\"http://taicarmen.files.wordpress.com/2011/05/earth-from-space-1.jpg\")";
+	var secondDiv = document.body.appendChild(document.createElement('div'));
+	
+
+	secondDiv.appendChild(DOMBuilder.build(['div',
+			['select', { id: "pageSelector2", change: function()
+			{
+				document.getElementById("page" + currentPage).style.display = "none";
+				document.getElementById("page" + this.selectedIndex).style.display = "inline";
+				document.getElementById("pageSelector").selectedIndex = this.selectedIndex;
+				currentPage = this.selectedIndex;
+			} } ], 
+			['br'],
+			//['input', {id: "inputName", value : "Default"}], ['br'],
+			['textarea', {  keydown: function(e)
+											{
+												
+												var keyCode = e.keyCode || e.which;
+												if(keyCode == 9)
+												{
+													e.preventDefault();
+													this.value = this.value.substring(0, this.selectionStart) + "\t" + this.value.substring(this.selectionStart);
+												}
+
+
+											}, id: "inputPost", cols: 50, rows: 25}], ['br'],
+			['button', { click: function() 
+				{
+					socket.emit("newPost", { thread: cThread, poster:  username, post: (document.getElementById("inputPost").value) });
+					document.getElementById("inputPost").value = "";
+				} }, "Submit"
+			]
+		], "dom"));
+
+	function registerOrLogin()
+	{
+		//window.location.hash = "#login";
+		//mainDiv.innerHTML = "";
+		var bod = 	[
+						'fieldset', { style: " background-color: white; width: 220px; height: 320px; ", class: "scroller", id: "example" },
+							['table', { style: "width: 100px " },
+								['tr', ['label', "Username"], ['input', { style: "height: 32px", id: "username"} ] ],
+								['tr', ['label', "Password"], ['input', { style: "height: 32px", type: "password", id: "password"}]]
+							],
+							["button", { style: " width: 178px; ", click: function()
+								{
+									socket.emit("login", { username: document.getElementById("username").value, password: encrypt(document.getElementById("password").value) });
+								} 
+							},"Login"] , ['br'],
+							['button', { style: " width: 178px; ", click: function()
+										{
+											socket.emit("register", 
+											{ 
+													username: document.getElementById("username").value, password: encrypt(document.getElementById("password").value) 
+											});
+										}}, "Register"] 	
+
+					];
+
+		mainDiv.appendChild( DOMBuilder.build(bod, "dom") );
+		AddScroller("example", 50, "40%");
+	}
+
+
+	secondDiv.style.visibility = "hidden";
+		//Try to make a connection.
+	try
+	{
+		socket =  io.connect(document.location.protocol + "//" + document.location.hostname + ":8000"); 
+
+		//login if recently logged in.
+		if(getCookie("username") != "")
+		{
+
+			socket.emit("login", { username: getCookie("username"), password: (getCookie("pass")) });
+		}
+
+
+		//socket.emit("requestThread", { thread : "Welcome"});
+	} catch(ex)
+	{
+		alert("No Socket Exists -- Site Can Not Work Properly Without it");
+	}
+
+	socket.on('newPost', function(data)
+	{
+		mainDiv.appendChild(DOMBuilder.build(newPost(data.poster, data.post, new Date(data.date), data.score)), "dom");
+		//mainDiv.appendChild(document.createElement('hr'));
+	});
+
+
+
+	socket.on("editPost", function(data)
+	{
+		document.getElementById("post" + data.id).innerHTML = DOMBuilder.build(makePre(data.post), "html");
+	});
+
+	socket.on("votePost", function(data)
+	{
+		document.getElementById("score" + data.id).innerHTML = "Votes: " + data.score;
+	});
+
+	socket.on("registerResponse", function(data)
+	{
+		alert(data.response);
+	});
+
+	socket.on("loginResponse", function(data)
+	{
+
+		//new extension added to retain login status
+		if(getCookie("username") != "")
+		{
+			username = getCookie("username");
+		}
+		else
+		username = document.getElementById("username").value;
+
+		if(data.response == "Success")
+		{
+			loggedIn = true;
+
+
+			if(getCookie("pass") == "")
+			{
+				var pass = encrypt(document.getElementById("password").value);
+				document.cookie = "username=" +username + ";";
+				document.cookie = "pass=" + pass + ";";
+			}
+			var elem;
+
+			//if(document.getElementById("username") != null)
+			//requestBoard();
+			//else 
+			parseHash();
+			return (elem = document.getElementById("loginLabel")).parentNode.removeChild(elem);
+		}
+		else alert(data.response);
+	});
+
+	var firstTime = true;
+
+	socket.on('sendBoard', function(data)
+	{
+
+		document.getElementById("refreshButton").style.display = "none";
+		mainDiv.innerHTML = "";
+
+		cBoard = data.name;
+
+
+		if(loggedIn)mainDiv.appendChild(DOMBuilder.build(['div', ['label', { class: "small button changeColor2", click: function()
+			{
+				var nThread = window.prompt("Type in the name of the new thread: ");
+				if(nThread != "null" && nThread != null && nThread != "" && nThread != undefined)
+					socket.emit("newThread", { thread: escape(nThread) });	
+			} }, "Add Thread"], ['br'] ],"dom"));
+
+		for(var i = 0; i < JSON.parse(data.threads).length; i++)
+		{
+
+			var test = [ 'div', { class: "panel" }, ['label', { class: "panel", id: JSON.parse(data.threads)[i][0],  click : function()
+				{
+					socket.emit("requestThread", { thread: this.id });
+					nextTime = false;
+					window.location.hash += ":" + this.id;
+					cThread = this.id;
+				}}, unescape(JSON.parse(data.threads)[i][0])], ['label', "Thread By: " + JSON.parse(data.threads)[i][1] ] ];
+			mainDiv.appendChild(DOMBuilder.build(test, 'dom'));
+		}
+		secondDiv.style.visibility = "hidden";
+
+		if(window.location.hash.length > 1 && firstTime)
+		{
+			parseHash();	
+		} else window.location.hash = "#" + cBoard;
+
+		firstTime = false;
+	});
+
+	var currentPage = 0;
+	socket.on('sendThread', function(data)
+	{
+		count = 0;
+		currentPage = 0;
+
+		document.getElementById("refreshButton").style.display = "";
+
+		var threadViewer = ['div',
+			['select', { id: "pageSelector", change: function()
+			{
+				document.getElementById("page" + currentPage).style.display = "none";
+				document.getElementById("page" + this.selectedIndex).style.display = "inline";
+				document.getElementById("pageSelector2").selectedIndex = this.selectedIndex;
+				currentPage = this.selectedIndex;
+			} } ]
+		];
+
+		var making = [];
+		//var pages = [];
+
+		making.push('div');
+
+		mainDiv.innerHTML = "";
+		
+		var posts = JSON.parse(data.posts);
+
+		var cPage = null;
+		var pages = 0;
+
+		for(var i = 0; i < posts.length; i++)
+		{
+			if(i % 15 == 0)
+			{
+				if(cPage != null) making.push(cPage);
+
+				cPage = ['div', { style: " display: none; ", id: "page" + pages++ } ];
+			}
+
+			cPage.push(newPost(posts[i][0], posts[i][1], new Date(posts[i][2]), posts[i][3]));
+			//cPage.push(['hr']);
+		}
+
+		if(cPage != null)
+		making.push(cPage);
+		making.push(['label', "*Newest Posts Below*"]);
+		//making.push(['hr']);
+
+		threadViewer.push(making);
+
+		threadViewer.push(['br']);
+		
+		
+		mainDiv.appendChild(DOMBuilder.build(threadViewer, "dom"));
+
+		
+		
+		if(cPage != null)
+		document.getElementById("page0").style.display = "inline";
+
+		while(document.getElementById("pageSelector2").options.length != 0)
+		{
+			document.getElementById("pageSelector2").remove(0);
+		}
+
+		//add in the pages
+		for(var i = 0; i < pages || (i == 0 && cPage == null); i++)
+		{
+			var option = document.createElement("option");
+			var option2 = document.createElement("option");
+			option2.text = option.text = "Page: " + (i+1);
+			document.getElementById("pageSelector").add(option);
+			document.getElementById("pageSelector2").add(option2);
+		}
+
+		if(loggedIn) secondDiv.style.visibility = "visible";
+	});
+
+}
+</script>
+</head>
+<body onload = "init()">
+</body>
+</html>
