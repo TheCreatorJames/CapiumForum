@@ -7,5 +7,6 @@ This is a small lightweight "board" based forum. Similar to Reddit in some ways.
 
 ### Running the Server
 
-Use the terminal command
+Use the terminal command :
+
 node server.js 
