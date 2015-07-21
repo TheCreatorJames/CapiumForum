@@ -10,3 +10,9 @@ This is a small lightweight "board" based forum. Similar to Reddit in some ways.
 Use the terminal command :
 
 ```node server.js ```
+
+
+### Demo
+There is a small demo up and running at 
+
+http://forum-creatorjames.rhcloud.com/
