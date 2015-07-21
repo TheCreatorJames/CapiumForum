@@ -9,4 +9,4 @@ This is a small lightweight "board" based forum. Similar to Reddit in some ways.
 
 Use the terminal command :
 
-node server.js 
+```node server.js ```
