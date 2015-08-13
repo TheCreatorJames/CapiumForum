@@ -28,7 +28,7 @@ Older forums used [BBCode](https://en.wikipedia.org/wiki/BBCode) for formatting,
 ##### No Database Required
 While not having database support can seem like a bad thing, it doesn't do any harm here. Relational Databases can be slow and bloated, and sometimes unnecessary. For the purposes of a lightweight forum, a database was not necessary. This does not mean support will not be added down the line. 
 
-###### Portable
+##### Portable
 Because Capium does not require a database, migrating from system to system is quite easy. Just zip up your SRS files and you're ready to go. With databases, this kind of portability is not always available.
 
 ##### Lightweight
