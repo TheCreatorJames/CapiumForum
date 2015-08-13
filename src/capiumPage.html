@@ -16,6 +16,7 @@ p
 <script src="https://cdn.rawgit.com/chjj/marked/master/lib/marked.js"></script>
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.js"></script>
 %attachment%
 <script type="text/javascript">
 //The Boing Follower.
@@ -438,7 +439,7 @@ function init()
 		} else nextTime = true;
 	}
 
-	document.body.appendChild( DOMBuilder.build(['div', 
+	document.body.appendChild( DOMBuilder.build(['div', { id: "topDiv" },
 		['label', { class: "small button changeColor2", click:  requestBoard }, "Board Menu"
 		], 
 		['label', { class: "small button changeColor2", click:  goToBoard }, "Switch Board"
@@ -451,6 +452,9 @@ function init()
 	] , "dom"));
 
 	var mainDiv = document.body.appendChild(document.createElement('div'));
+
+	mainDiv.innerHTML = "<div class=\"panel\"><div class=\"panel\"> If you can see this, then it is very likely you do not have WebSocket Support<br>Check out <a>http://websocketstest.com/</a></div></div>";
+
 	//mainDiv.style.backgroundImage = "url(\"http://taicarmen.files.wordpress.com/2011/05/earth-from-space-1.jpg\")";
 	var secondDiv = document.body.appendChild(document.createElement('div'));
 	
@@ -519,7 +523,7 @@ function init()
 		//Try to make a connection.
 	try
 	{
-		socket =  io.connect(document.location.protocol + "//" + document.location.hostname + ":8000"); 
+		socket =  io.connect(document.location.protocol + "//" + document.location.hostname); 
 
 		//login if recently logged in.
 		if(getCookie("username") != "")
@@ -594,6 +598,8 @@ function init()
 	});
 
 	var firstTime = true;
+
+
 
 	socket.on('sendBoard', function(data)
 	{
@@ -715,5 +721,6 @@ function init()
 </script>
 </head>
 <body onload = "init()">
+
 </body>
 </html>
