@@ -25,6 +25,12 @@ Many older forums required you to refresh to check for new content. Capium doesn
 ##### Markdown Syntax
 Older forums used [BBCode](https://en.wikipedia.org/wiki/BBCode) for formatting, which is a lot like writing HTML. Capium uses Markdown, which is much easier to work with for lightweight syntax. Many people are familiar with Markdown already, so it was an obvious choice. 
 
+##### No Database Required
+While not having database support can seem like a bad thing, it doesn't do any harm here. Relational Databases can be slow and bloated, and sometimes unnecessary. For the purposes of a lightweight forum, a database was not necessary. This does not mean support will not be added down the line. 
+
+##### Lightweight
+This little application can is pretty efficient. The rendering for web pages is done on the client, rather than the server, which means faster response times and more requests fulfilled. Your Raspberry Pi could host your forum easily. Bigger Forums require more resources, and when you're running your database alongside your bloated forum on the same RPi, things can get slow.
+
 ##### Easy To Setup
 With a small 16KB file, and a two step launch process, this forum is one of the easiest to launch and take advantage of.
 
