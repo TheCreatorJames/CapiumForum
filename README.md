@@ -3,11 +3,15 @@ A small, lightweight portable forum written in Node.js
 
 
 ### Welcome
-This is a small lightweight "board" based forum. Similar to Reddit in some ways. It was written in my sophomore year of Highschool. It was the first website I ever wrote. 
+This is a small lightweight "board" based forum. Similar to [Reddit](https://www.reddit.com) in some ways. 
 
-The forum serves json through websockets which allow real-time chat-like communication. The forum has functionality to like and dislike posts, as well as post pictures. 
+The forum gives you the ability to like and dislike posts, post pictures, paste links, and format text. It supports markdown, which is the same syntax used by popular websites such as [Github](https://www.github.com) to display formatted text.
 
-Using websockets and json also allows me to serve threads much more quickly. Unlike heavier forums, this one serves pages in milliseconds. 
+Having been developed in 2013, the website uses technologies that were fairly new at  the time. The website is built on [socket.io](http://socket.io/), which creates [websockets](https://en.wikipedia.org/wiki/WebSocket) to allow new posts and edits to show up on everyone's screen in real time. 
+
+Browsing the forum is very quick, as all of the threads are served as compact [JSON]() through the websockets. Rather than using old techniques rendering the website on the server, the rendering is left to the client, which makes response times much faster and allows the server to serve many more requests.
+
+Because the server is powered by [Node.js](https://nodejs.org/), which is based on Google's V8 JavaScript Engine](https://developers.google.com/v8/?hl=en), JSON is native and serializing the forum to send to the clients is fast and easy. No libraries for parsing necessary.
 
 The entire forum setup is 11KB compressed, miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
 
