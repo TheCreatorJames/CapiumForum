@@ -15,9 +15,22 @@ Because the server is powered by [Node.js](https://nodejs.org/), which is based 
 
 The entire forum setup is 16KB compressed (with weaker compression algorithms), miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
 
+
+### Features
+
+
+##### Post in Real Time
+Many older forums required you to refresh to check for new content. Capium doesn't. With Capium, all posts and edits show up in real time using modern websocket technology. This can be extremely helpful in discussions, and deliver feedback as early as possible.
+
+##### Markdown Syntax
+Older forums used [BBCode](https://en.wikipedia.org/wiki/BBCode) for formatting, which is a lot like writing HTML. Capium uses Markdown, which is much easier to work with for lightweight syntax. Many people are familiar with Markdown already, so it was an obvious choice. 
+
+##### Easy To Setup
+With a small 16KB file, and a two step launch process, this forum is one of the easiest to launch and take advantage of.
+
 ### Running the Server
 
-First you need to download the [socket.io]() library.
+First you need to download the [socket.io](https://www.npmjs.com/package/socket.io) library.
 
 Use the terminal command : 
 ```npm install socket.io```
