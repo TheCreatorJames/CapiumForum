@@ -3,7 +3,7 @@ A small, lightweight portable forum written in Node.js
 
 
 ### Welcome
-This is a small lightweight "board" based forum. Similar to [Reddit](https://www.reddit.com) in some ways. 
+This is a lightweight forum. It is similar to [Reddit](https://www.reddit.com) in some ways, due to it being board based. 
 
 The forum gives you the ability to like and dislike posts, post pictures, paste links, and format text. It supports markdown, which is the same syntax used by popular websites such as [Github](https://www.github.com) to display formatted text.
 
