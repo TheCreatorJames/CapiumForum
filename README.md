@@ -13,11 +13,18 @@ Browsing the forum is very quick, as all of the threads are served as compact [J
 
 Because the server is powered by [Node.js](https://nodejs.org/), which is based on [Google's V8 JavaScript Engine](https://developers.google.com/v8/?hl=en), JSON is native and serializing the forum to send to the clients is fast and easy. No libraries for parsing necessary.
 
-The entire forum setup is 11KB compressed, miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
+The entire forum setup is 16KB compressed (with weaker compression algorithms), miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
 
 ### Running the Server
 
-Use the terminal command :
+First you need to download the [socket.io]() library.
+
+Use the terminal command : 
+```npm install socket.io```
+
+Then you need to start the server by 
+
+Running the terminal command :
 
 ```node server.js ```
 
