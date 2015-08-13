@@ -4,8 +4,18 @@
 <head>
 <meta charset="UTF-8">
 <title>Website</title>
+<style>
+p
+{
+	font-size: 12px 
+	font-family: "Verdana", Times, Serif;
+}
+</style>
 <link href="http://cdn.jsdelivr.net/foundation/5.1.1/css/foundation.min.css" type ="text/css" rel="stylesheet">
-<script src="//cdn.jsdelivr.net/foundation/5.1.1/css/foundation.min.js"></script>
+<script src="http://cdn.jsdelivr.net/foundation/5.1.1/css/foundation.min.js"></script>
+<script src="https://cdn.rawgit.com/chjj/marked/master/lib/marked.js"></script>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 %attachment%
 <script type="text/javascript">
 //The Boing Follower.
@@ -23,6 +33,7 @@ function AddScroller(elName, topOffset, leftOffset)
 {
 	stuffToScroll.push([elName, topOffset, leftOffset]);
 }
+
 
 var stuffToScroll = [];
 
@@ -128,9 +139,10 @@ function getCookie(cname) {
 
 function makePre(post, postId)
 {
-	var postX = post.match(new RegExp("[$][=][A-Za-z0-9_:;,+\\\\:?=./\\\\&-]+"));
+	//var postX = post.match(new RegExp("[$][=][A-Za-z0-9_:;,+\\\\:?=./\\\\&-]+"));
 	var makingPre = ['pre', { id : "post" + postId, style: "white-space: pre-wrap; font: 12px Verdana" }];
 
+	/*
 	while(postX != null)
 	{
 		postX = postX.toString();
@@ -142,6 +154,7 @@ function makePre(post, postId)
 
 		postX = post.match(new RegExp("[$][=][A-Za-z0-9_:?=\\\\:./-]+"));
 	}
+	*/
 
 	if(post != "")
 	{
@@ -221,6 +234,11 @@ function Alphabetize(info)
 	return result;
 }
 
+function htmlDecode(value) {
+  //value = value.replace(/\&lt;/g, "<");
+  //value = value.replace(/\&gt;/g, ">");
+  return value;
+}
 
 //encrypts with a key. It's probably as strong as a small OTP.
 function encryptPass(info, key)
@@ -278,7 +296,11 @@ function newPost(poster, post, date, score)
 	var editing = false;
 	var original = post;
 	var postId = count++;
+
+	
 	if(post === undefined || post === null) return [];
+	setTimeout(function() { document.getElementById("post" +postId).innerHTML = marked(original);  }, 200);
+
 	return	[
 				'div', { style: "display: inline-table;", class: "panel changeColor postDiv" },
 					['table', { class: "postDiv changeColor"},
@@ -292,7 +314,7 @@ function newPost(poster, post, date, score)
 						],
 						['tr', {  },
 							( (loggedIn) ? ['td',
-								((username == poster) ? ['button', { class: "small", click: function()
+								((username == poster) ? ['button', { class: "small" , click: function()
 								{	
 									if(editing)
 									{
@@ -349,8 +371,24 @@ function goToBoard()
 	socket.emit("createBoard", { board: escape(window.prompt("Name of the Board?")) });
 }
 
+
+
+
 function init()
 {
+
+
+	var trenderer = new marked.Renderer();
+	trenderer.paragraph = function(text)
+	{
+		return text + '\n';
+	};
+
+
+	marked.setOptions({
+  	renderer: trenderer,
+  	sanitize: true
+	});
 	scrollStuffAround();
 
 	function requestBoard()
@@ -507,7 +545,9 @@ function init()
 
 	socket.on("editPost", function(data)
 	{
-		document.getElementById("post" + data.id).innerHTML = DOMBuilder.build(makePre(data.post), "html");
+		document.getElementById("post" + data.id).innerHTML = marked(data.post);
+
+		//setTimeout(function() {document.getElementById("post" + data.id).innerHTML = marked(document.getElementById("post" + data.id).innerHTML)}, 200); 
 	});
 
 	socket.on("votePost", function(data)
