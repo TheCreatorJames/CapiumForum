@@ -11,7 +11,7 @@ Having been developed in 2013, the website uses technologies that were fairly ne
 
 Browsing the forum is very quick, as all of the threads are served as compact [JSON]() through the websockets. Rather than using old techniques rendering the website on the server, the rendering is left to the client, which makes response times much faster and allows the server to serve many more requests.
 
-Because the server is powered by [Node.js](https://nodejs.org/), which is based on Google's V8 JavaScript Engine](https://developers.google.com/v8/?hl=en), JSON is native and serializing the forum to send to the clients is fast and easy. No libraries for parsing necessary.
+Because the server is powered by [Node.js](https://nodejs.org/), which is based on [Google's V8 JavaScript Engine](https://developers.google.com/v8/?hl=en), JSON is native and serializing the forum to send to the clients is fast and easy. No libraries for parsing necessary.
 
 The entire forum setup is 11KB compressed, miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
 
