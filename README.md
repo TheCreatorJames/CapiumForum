@@ -13,7 +13,7 @@ Browsing the forum is very quick, as all of the threads are served as compact [J
 
 Because the server is powered by [Node.js](https://nodejs.org/), which is based on [Google's V8 JavaScript Engine](https://developers.google.com/v8/?hl=en), JSON is native and serializing the forum to send to the clients is fast and easy. No libraries for parsing necessary.
 
-The entire forum setup is 16KB compressed (with weaker compression algorithms), which is miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
+The entire forum setup is 11KB compressed (with weaker compression algorithms), which is miniscule in comparison to other forums, but similar in core functionality. Now that I am a more mature developer, I will likely add more features to the forum, and enhance the security.
 
 
 ### Features
