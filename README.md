@@ -35,7 +35,7 @@ Because Capium does not require a database, migrating from system to system is q
 This little application can is pretty efficient. The rendering for web pages is done on the client, rather than the server, which means faster response times and more requests fulfilled. Your Raspberry Pi could host your forum easily. Bigger Forums require more resources, and when you're running your database alongside your bloated forum on the same RPi, things can get slow.
 
 ##### Easily Accessible
-With a small 16KB file, and a two step launch process, this forum is one of the easiest to launch and take advantage of.
+With a small 11KB file, and a two step launch process, this forum is one of the easiest to launch and take advantage of.
 
 ### Running the Server
 
