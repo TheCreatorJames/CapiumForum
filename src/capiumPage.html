@@ -17,7 +17,7 @@ p
 <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.js"></script>
-%attachment%
+<script src="https://cdn.rawgit.com/insin/DOMBuilder/master/dist/DOMBuilder.min.js"></script>
 <script type="text/javascript">
 //The Boing Follower.
 //Written by Jesse Mitchell.
@@ -523,7 +523,7 @@ function init()
 		//Try to make a connection.
 	try
 	{
-		socket =  io.connect(document.location.protocol + "//" + document.location.hostname); 
+		socket =  io.connect(document.location.protocol + "//" + document.location.hostname + ":8000"); 
 
 		//login if recently logged in.
 		if(getCookie("username") != "")

@@ -2,7 +2,6 @@ var http = require('http');
 var fs = require('fs');
 var socketio = require('socket.io');
 
-var domBuild = fs.readFileSync("DOMBuilder.min.js").toString();
 var reloadPage = true;
 
 var users;
@@ -137,17 +136,13 @@ if(!loadBoard())
 	boards = {};
 	createBoard("default");
 } 
-domBuild = "<script>" + domBuild + "</script>";
-
 var mainPage = fs.readFileSync("capiumPage.html").toString();
-	mainPage = mainPage.replace("%attachment%", domBuild);
-
+//
 var server = http.createServer(function(request, response)
 {
 	if(reloadPage)
 	{
 		mainPage = fs.readFileSync("capiumPage.html").toString();
-		mainPage = mainPage.replace("%attachment%", domBuild);
 	}
 
 	response.writeHead(200, { 'Content-Type' : "text/html"});
@@ -160,8 +155,6 @@ var io = socketio.listen(server);
 io.sockets.on('connection', function(socket)
 {
 
-	//socket.emit("sendThread", { posts: JSON.stringify([ ["Jesse", "Hello Guys", new Date()]]) });
-	//socket.emit("newPost", { poster: "Jesse", post: "Hello World", date: JSON.stringify(new Date()) });
 	socket.thread = "";
 	socket.board = "default";
 	socket.username = "";
@@ -174,6 +167,8 @@ io.sockets.on('connection', function(socket)
 
 	sendBoard();
 
+
+	//when a new post is added
 	socket.on("newPost", function(data)
 	{
 		if(socket.username != "")
@@ -185,6 +180,8 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+
+	//when a user registers
 	socket.on("register", function(data)
 	{
 		if(users[data.username.toLowerCase()] === undefined)
@@ -198,10 +195,11 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+	//when a user tries to log in.
 	socket.on("login", function(data)
 	{
 		if(users[data.username.toLowerCase()] === undefined);
-		else if(users[data.username.toLowerCase()][1] == superEncrypt(data.password, data.username.toLowerCase()))
+		else if(users[data.username.toLowerCase()][1] == superEncrypt(data.password, data.username.toLowerCase())) //checks against encrypted password.
 		{
 			socket.username = users[data.username.toLowerCase()][0];
 			socket.emit("loginResponse", { response: "Success"});
@@ -211,11 +209,14 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+	//when a post is deleted
 	socket.on("deletePost", function(data)
 	{
 		boards[socket.board].threads.data[data.thread][data.id] = [];
 	});
 
+
+	//when a post is voted on.
 	socket.on("votePost", function(data)
 	{
 		if(!boards[socket.board].threads.metadata[data.thread][data.id][socket.username])
@@ -231,6 +232,8 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+
+	//when a post is edited
 	socket.on("editPost", function(data)
 	{
 		//console.log(data.id);
@@ -241,6 +244,8 @@ io.sockets.on('connection', function(socket)
 		}
 	});
 
+
+	//When a new thread is created
 	socket.on("newThread", function(data)
 	{
 		if(socket.username != "")
@@ -249,25 +254,20 @@ io.sockets.on('connection', function(socket)
 			{
 				boards[socket.board].threads.data[data.thread] = [];
 				boards[socket.board].threads.metadata[data.thread] = [];
-				//boards[socket.board].threads.metadata[data.thread]
-				//boards[socket.board].threads.metadataNames = [];
-
-				//boards[socket.board].threads.metadataNames.push(socket.username);
 				boards[socket.board].threads.names.push([data.thread, socket.username]);
 			}
-			//socket.emit("sendBoard", { threads: JSON.stringify(boards[socket.board].threads.names)});
 			sendBoard();
 		}
 	});
 
+	//When a board is created
 	socket.on("createBoard", function(data)
 	{
 		if(data.board)
 		{
-			if( boards[data.board.toLowerCase()] === undefined ) createBoard(data.board.toLowerCase());
+			if(boards[data.board.toLowerCase()] === undefined) createBoard(data.board.toLowerCase());
 			
 			socket.board = data.board.toLowerCase();
-			//socket.emit("sendBoard", { threads: JSON.stringify(boards[socket.board].threads.names)});
 			sendBoard();
 		}
 	});
@@ -278,7 +278,6 @@ io.sockets.on('connection', function(socket)
 		else
 		{
 			socket.board = data.board.toLowerCase();
-			//socket.emit("sendBoard", { threads: JSON.stringify(boards[socket.board].threads.names)});
 			sendBoard();
 		}
 	});
@@ -294,9 +293,12 @@ io.sockets.on('connection', function(socket)
 
 		socket.leave(socket.thread);
 
-		socket.thread = data.thread;
-		socket.join(data.thread);
-		
+		setTimeout(function() 
+		{
+			socket.thread = data.thread;
+			socket.join(data.thread);
+		}, 50); //set timeout is used due to a rare de-synchronization bug. 
+			
 		socket.emit("sendThread", { posts: JSON.stringify(boards[socket.board].threads.data[data.thread]) });
 
 	});
