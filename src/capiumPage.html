@@ -297,10 +297,15 @@ function newPost(poster, post, date, score)
 	var editing = false;
 	var original = post;
 	var postId = count++;
-
+	var editPost = null;
 	
 	if(post === undefined || post === null) return [];
-	setTimeout(function() { document.getElementById("post" +postId).innerHTML = marked(original);  }, 200);
+
+	setTimeout(function() 
+	{ 
+		var markDownText = marked(original);
+		document.getElementById("post" +postId).innerHTML = markDownText.substring(0, markDownText.length - 2);   
+	}, 200);
 
 	return	[
 				'div', { style: "display: inline-table;", class: "panel changeColor postDiv" },
@@ -319,8 +324,8 @@ function newPost(poster, post, date, score)
 								{	
 									if(editing)
 									{
-										socket.emit("editPost", { id: postId, poster: username, post: document.getElementById("editText").value, thread: cThread });
-										original = document.getElementById("editText").value;
+										socket.emit("editPost", { id: postId, poster: username, post: editPost.value, thread: cThread });
+										original = editPost.value;
 										this.innerHTML = "Edit";
 									}
 									else
@@ -329,7 +334,8 @@ function newPost(poster, post, date, score)
 										var editDiv = document.getElementById("post"+ postId);
 										//var original = editDiv.innerHTML;
 
-										editDiv.innerHTML = DOMBuilder.build(['textarea', { keydown: function(e)
+										editDiv.innerHTML = "";
+										editPost = DOMBuilder.build(['textarea', { keydown: function(e)
 											{
 												var keyCode = e.keyCode || e.which;
 												if(keyCode == 9)
@@ -339,7 +345,9 @@ function newPost(poster, post, date, score)
 												}
 
 
-											}, id: "editText", style: "width: 90%; height: 90%;" }, original], "html");
+											}, style: "width: 90%; height: 90%;" }, original], "dom");
+
+										editDiv.appendChild(editPost);
 
 										this.innerHTML = "Done";
 									}
@@ -382,7 +390,7 @@ function init()
 	var trenderer = new marked.Renderer();
 	trenderer.paragraph = function(text)
 	{
-		return text + '\n';
+		return text + '\n\n';
 	};
 
 
